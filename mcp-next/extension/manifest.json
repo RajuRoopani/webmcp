@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "WebMCP - Any Website to AI Chat",
+  "version": "1.0.0",
+  "description": "Capture any website's APIs, auto-generate MCP tools, and chat with them using Claude or OpenAI",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "sidePanel",
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "devtools_page": "devtools.html",
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "WebMCP Chat"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

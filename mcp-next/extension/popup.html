@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 260px;
+      background: #0a0a12;
+      color: #e2e8f0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      padding: 16px;
+    }
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #a78bfa, #60a5fa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 12px;
+    }
+    .desc { font-size: 11px; color: #6b7280; line-height: 1.6; margin-bottom: 16px; }
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 10px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 8px;
+      transition: opacity 0.15s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .btn-primary { background: linear-gradient(135deg, #7c3aed, #5b21b6); color: white; }
+    .btn-ghost { background: #1a1a2e; border: 1px solid #2d2d4e; color: #a78bfa; }
+
+    .stats {
+      background: #12121e;
+      border: 1px solid #252540;
+      border-radius: 8px;
+      padding: 10px;
+      font-size: 11px;
+      color: #6b7280;
+      margin-top: 4px;
+    }
+    .stat-row { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .stat-row:last-child { margin-bottom: 0; }
+    .stat-val { color: #a78bfa; font-weight: 600; }
+
+    .tip { font-size: 10px; color: #4b5563; margin-top: 12px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="logo">⚡ WebMCP</div>
+  <div class="desc">Turn any website into an AI-powered chat. Captures live API calls and chats using Claude or OpenAI.</div>
+
+  <button class="btn btn-primary" id="open-chat">💬 Open Chat Panel</button>
+  <button class="btn btn-ghost" id="open-devtools">🔌 Open API Capture (DevTools)</button>
+
+  <div class="stats">
+    <div class="stat-row">
+      <span>APIs captured</span>
+      <span class="stat-val" id="stat-apis">0</span>
+    </div>
+    <div class="stat-row">
+      <span>Provider</span>
+      <span class="stat-val" id="stat-provider">–</span>
+    </div>
+    <div class="stat-row">
+      <span>Status</span>
+      <span class="stat-val" id="stat-status">–</span>
+    </div>
+  </div>
+
+  <div class="tip">
+    💡 Open DevTools (F12) → WebMCP tab to see captured APIs.<br>
+    Navigate the website and APIs appear automatically.
+  </div>
+
+  <script>
+    document.getElementById('open-chat').addEventListener('click', () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, tabs => {
+        if (tabs[0]) {
+          chrome.sidePanel.open({ tabId: tabs[0].id });
+          window.close();
+        }
+      });
+    });
+
+    document.getElementById('open-devtools').addEventListener('click', () => {
+      chrome.tabs.query({ active: true, currentWindow: true }, () => {
+        // User needs to open DevTools manually - can't do it programmatically
+        alert('Open DevTools (F12 or Cmd+Option+I) and click the "WebMCP" panel tab.');
+      });
+    });
+
+    // Load stats
+    chrome.runtime.sendMessage({ type: 'GET_ENDPOINTS' }, res => {
+      document.getElementById('stat-apis').textContent = res?.endpoints?.length || 0;
+    });
+
+    chrome.runtime.sendMessage({ type: 'GET_SETTINGS' }, res => {
+      const s = res?.settings;
+      if (s) {
+        document.getElementById('stat-provider').textContent = s.provider === 'claude' ? '🟣 Claude' : '🟢 OpenAI';
+        document.getElementById('stat-status').textContent = s.apiKey ? '✓ Configured' : '⚠ No API key';
+      }
+    });
+  </script>
+</body>
+</html>
