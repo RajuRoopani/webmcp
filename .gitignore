@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build output
+lib/
+dist/
+*.js
+*.d.ts
+*.js.map
+!src/**/*.js
+
+# Environment files
+.env
+.env.local
+.env.*.local
+env/.env.*
+!env/.env.local.example
+
+# Teams Toolkit
+.fx/
+appPackage/build/
+
+# IDE
+.vscode/*
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temp
+temp/
+tmp/
+
+# Generated ICM investigation reports (contain internal data)
+icm_*_report.md
+icm_*_full_extract.json
+
+# Eufy API capture results (may contain device/account data)
+eufy_api_capture_results.json
+eufy_api_endpoints_report.json
+eufy_api_summary.json
+
+# Browser automation state/logs
+.playwright-mcp/
+
+# Local Claude settings (machine-specific)
+.claude/settings.local.json
+
+# Build artifacts
+tsconfig.tsbuildinfo

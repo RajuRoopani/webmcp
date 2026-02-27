@@ -1,0 +1,31 @@
+{
+  "name": "claude-code-teams-bot",
+  "version": "1.0.0",
+  "description": "Claude AI Code Assistant for Microsoft Teams",
+  "main": "lib/index.js",
+  "scripts": {
+    "build": "tsc --build",
+    "start": "node lib/index.js",
+    "watch": "nodemon --watch src -e ts --exec \"npm run build && npm start\"",
+    "dev": "nodemon --watch src -e ts --exec \"npm run build && npm start\"",
+    "dev:teamsfx": "env-cmd --silent -f .localSettings npm run dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.30.0",
+    "axios": "^1.6.0",
+    "botbuilder": "^4.22.0",
+    "dotenv": "^16.4.0",
+    "restify": "^11.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/restify": "^8.5.0",
+    "canvas": "^3.2.1",
+    "env-cmd": "^10.1.0",
+    "nodemon": "^3.0.0",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teams Performance Capture Tool</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #6264A7;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .instructions {
+            background: #fff4e6;
+            border-left: 4px solid #ff8c00;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        .button {
+            background: #6264A7;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        .button:hover {
+            background: #464775;
+        }
+        .button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 4px;
+            display: none;
+        }
+        .results.show {
+            display: block;
+        }
+        pre {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            max-height: 500px;
+        }
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .metric:last-child {
+            border-bottom: none;
+        }
+        .metric-name {
+            font-weight: 600;
+            color: #333;
+        }
+        .metric-value {
+            color: #666;
+        }
+        .score {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 14px;
+        }
+        .score-good {
+            background: #d4edda;
+            color: #155724;
+        }
+        .score-medium {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .score-poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .recommendation {
+            margin-top: 15px;
+            padding: 15px;
+            border-left: 4px solid;
+            background: #f9f9f9;
+        }
+        .rec-high {
+            border-color: #dc3545;
+        }
+        .rec-medium {
+            border-color: #ffc107;
+        }
+        .rec-low {
+            border-color: #28a745;
+        }
+        .loading {
+            text-align: center;
+            padding: 40px;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #6264A7;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Microsoft Teams Performance Capture Tool</h1>
+        <p class="subtitle">Analyze Teams load performance and get optimization recommendations</p>
+
+        <div class="instructions">
+            <strong>⚠️ Instructions:</strong>
+            <ol>
+                <li>Navigate to <strong>teams.cloud.microsoft/</strong> in this browser</li>
+                <li>Wait for Teams to fully load (5-10 seconds)</li>
+                <li>Come back to this tab and click "Capture Performance Data"</li>
+            </ol>
+        </div>
+
+        <div>
+            <button class="button" onclick="captureData()" id="captureBtn">
+                🔍 Capture Performance Data
+            </button>
+            <button class="button" onclick="copyResults()" id="copyBtn" disabled>
+                📋 Copy Results
+            </button>
+            <button class="button" onclick="downloadResults()" id="downloadBtn" disabled>
+                💾 Download JSON
+            </button>
+        </div>
+
+        <div id="loading" class="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing performance data...</p>
+        </div>
+
+        <div id="results" class="results">
+            <h2>Performance Analysis Results</h2>
+            <div id="summary"></div>
+            <div id="recommendations"></div>
+            <h3>Raw Data</h3>
+            <pre id="rawData"></pre>
+        </div>
+    </div>
+
+    <script>
+        let performanceData = null;
+
+        function captureData() {
+            const loading = document.getElementById('loading');
+            const results = document.getElementById('results');
+            const captureBtn = document.getElementById('captureBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+
+            captureBtn.disabled = true;
+            loading.style.display = 'block';
+            results.classList.remove('show');
+
+            setTimeout(() => {
+                try {
+                    performanceData = capturePerformanceData();
+                    displayResults(performanceData);
+                    results.classList.add('show');
+                    copyBtn.disabled = false;
+                    downloadBtn.disabled = false;
+                } catch (error) {
+                    alert('Error capturing data: ' + error.message);
+                    console.error(error);
+                } finally {
+                    loading.style.display = 'none';
+                    captureBtn.disabled = false;
+                }
+            }, 500);
+        }
+
+        function displayResults(data) {
+            // Summary
+            const summary = document.getElementById('summary');
+            summary.innerHTML = `
+                <h3>Key Metrics</h3>
+                <div class="metric">
+                    <span class="metric-name">First Contentful Paint</span>
+                    <span class="metric-value">${(data.paint.firstContentfulPaint / 1000).toFixed(2)}s ${getScoreBadge(data.scores.fcp)}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-name">Time to Interactive</span>
+                    <span class="metric-value">${(data.timeToInteractive / 1000).toFixed(2)}s ${getScoreBadge(data.scores.tti)}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-name">Total Bundle Size</span>
+                    <span class="metric-value">${data.bundleAnalysis.totalBundleSizeMB} MB ${getScoreBadge(data.scores.bundleSize)}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-name">Total Resources</span>
+                    <span class="metric-value">${data.resources.total}</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-name">Overall Score</span>
+                    <span class="metric-value">${getScoreBadge(data.scores.overall, true)}</span>
+                </div>
+            `;
+
+            // Recommendations
+            const recommendations = document.getElementById('recommendations');
+            if (data.recommendations && data.recommendations.length > 0) {
+                let recHTML = '<h3>Optimization Recommendations</h3>';
+                data.recommendations.forEach(rec => {
+                    recHTML += `
+                        <div class="recommendation rec-${rec.priority.toLowerCase()}">
+                            <strong>[${rec.priority}] ${rec.category}</strong>
+                            <p>${rec.issue}</p>
+                            <p><em>💡 ${rec.suggestion}</em></p>
+                            <p><strong>Impact:</strong> ${rec.impact}</p>
+                        </div>
+                    `;
+                });
+                recommendations.innerHTML = recHTML;
+            }
+
+            // Raw data
+            document.getElementById('rawData').textContent = JSON.stringify(data, null, 2);
+        }
+
+        function getScoreBadge(score, showNumber = false) {
+            const scoreValue = Math.round(score);
+            let className = 'score-good';
+            if (scoreValue < 50) className = 'score-poor';
+            else if (scoreValue < 75) className = 'score-medium';
+
+            const text = showNumber ? scoreValue : (scoreValue >= 75 ? '✅ Good' : scoreValue >= 50 ? '⚠️ Needs Work' : '❌ Poor');
+            return `<span class="score ${className}">${text}</span>`;
+        }
+
+        function copyResults() {
+            navigator.clipboard.writeText(JSON.stringify(performanceData, null, 2))
+                .then(() => alert('✅ Results copied to clipboard!'))
+                .catch(err => alert('❌ Failed to copy: ' + err));
+        }
+
+        function downloadResults() {
+            const dataStr = JSON.stringify(performanceData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `teams-perf-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Performance capture function (same as capture-perf-data.js)
+        function capturePerformanceData() {
+            const data = {
+                timestamp: new Date().toISOString(),
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                connection: navigator.connection ? {
+                    effectiveType: navigator.connection.effectiveType,
+                    downlink: navigator.connection.downlink,
+                    rtt: navigator.connection.rtt
+                } : null
+            };
+
+            // Navigation Timing
+            const navTiming = performance.getEntriesByType('navigation')[0];
+            if (navTiming) {
+                data.navigation = {
+                    dnsLookup: navTiming.domainLookupEnd - navTiming.domainLookupStart,
+                    tcpConnect: navTiming.connectEnd - navTiming.connectStart,
+                    tlsHandshake: navTiming.secureConnectionStart ? navTiming.connectEnd - navTiming.secureConnectionStart : 0,
+                    ttfb: navTiming.responseStart - navTiming.requestStart,
+                    domContentLoaded: navTiming.domContentLoadedEventEnd - navTiming.domContentLoadedEventStart,
+                    loadComplete: navTiming.loadEventEnd - navTiming.loadEventStart,
+                    domInteractive: navTiming.domInteractive - navTiming.fetchStart,
+                    fullLoadTime: navTiming.loadEventEnd - navTiming.fetchStart
+                };
+            }
+
+            // Paint Timing
+            const paintEntries = performance.getEntriesByType('paint');
+            data.paint = {
+                firstPaint: paintEntries.find(e => e.name === 'first-paint')?.startTime || 0,
+                firstContentfulPaint: paintEntries.find(e => e.name === 'first-contentful-paint')?.startTime || 0
+            };
+
+            // Resource Timing
+            const resources = performance.getEntriesByType('resource');
+            data.resources = {
+                total: resources.length,
+                totalSize: resources.reduce((sum, r) => sum + (r.transferSize || 0), 0),
+                byType: {}
+            };
+
+            // JavaScript Bundles
+            data.bundles = resources
+                .filter(r => r.name.endsWith('.js') && (r.transferSize || 0) > 10000)
+                .sort((a, b) => (b.transferSize || 0) - (a.transferSize || 0))
+                .map(r => ({
+                    name: r.name.split('/').pop().split('?')[0],
+                    size: r.transferSize,
+                    duration: r.duration
+                }));
+
+            // Memory Usage
+            if (performance.memory) {
+                data.memory = {
+                    usedJSHeapSize: performance.memory.usedJSHeapSize,
+                    totalJSHeapSize: performance.memory.totalJSHeapSize,
+                    jsHeapSizeLimit: performance.memory.jsHeapSizeLimit
+                };
+            }
+
+            // Calculate Time to Interactive
+            data.timeToInteractive = navTiming ? navTiming.domContentLoadedEventEnd : 0;
+
+            // Analyze bundles
+            const totalBundleSize = data.bundles.reduce((sum, b) => sum + (b.size || 0), 0);
+            data.bundleAnalysis = {
+                totalBundleSize: totalBundleSize,
+                totalBundleSizeMB: (totalBundleSize / 1024 / 1024).toFixed(2),
+                bundleCount: data.bundles.length
+            };
+
+            // Calculate scores
+            const fcp = data.paint.firstContentfulPaint / 1000;
+            const tti = data.timeToInteractive / 1000;
+            const bundleSizeMB = totalBundleSize / 1024 / 1024;
+
+            data.scores = {
+                fcp: Math.max(0, Math.min(100, 100 - (fcp - 1) * 50)),
+                tti: Math.max(0, Math.min(100, 100 - (tti - 3) * 25)),
+                bundleSize: Math.max(0, Math.min(100, 100 - (bundleSizeMB - 0.3) * 142)),
+                overall: 0
+            };
+            data.scores.overall = Math.round((data.scores.fcp + data.scores.tti + data.scores.bundleSize) / 3);
+
+            // Generate recommendations
+            data.recommendations = [];
+
+            if (bundleSizeMB > 1) {
+                data.recommendations.push({
+                    priority: 'HIGH',
+                    category: 'Bundle Size',
+                    issue: `Total bundle size is ${data.bundleAnalysis.totalBundleSizeMB} MB`,
+                    suggestion: 'Implement code splitting and lazy loading',
+                    impact: 'Could reduce initial load by 40-60%'
+                });
+            }
+
+            if (fcp > 1.5) {
+                data.recommendations.push({
+                    priority: 'HIGH',
+                    category: 'First Contentful Paint',
+                    issue: `FCP is ${fcp.toFixed(2)}s (target: <1.5s)`,
+                    suggestion: 'Inline critical CSS, defer non-critical styles',
+                    impact: 'Could improve FCP by 30-50%'
+                });
+            }
+
+            if (resources.length > 100) {
+                data.recommendations.push({
+                    priority: 'MEDIUM',
+                    category: 'Resource Count',
+                    issue: `Loading ${resources.length} resources`,
+                    suggestion: 'Bundle resources, implement resource hints',
+                    impact: 'Could reduce requests by 40-60%'
+                });
+            }
+
+            return data;
+        }
+    </script>
+</body>
+</html>

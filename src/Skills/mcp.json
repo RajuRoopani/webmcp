@@ -1,0 +1,45 @@
+{
+  "mcpServers": {
+    "kusto-icm": {
+      "command": "uvx",
+      "args": ["microsoft-fabric-rti-mcp"],
+      "env": {
+        "KUSTO_SERVICE_URI": "https://icmcluster.kusto.windows.net/",
+        "KUSTO_SERVICE_DEFAULT_DB": "IcmDataWarehouse"
+      }
+    },
+    "kusto-spoons": {
+      "command": "uvx",
+      "args": ["microsoft-fabric-rti-mcp"],
+      "env": {
+        "KUSTO_SERVICE_URI": "https://o365monwus.westus.kusto.windows.net/",
+        "KUSTO_SERVICE_DEFAULT_DB": "o365monitoring"
+      }
+    },
+    "ado": {
+      "command": "npx",
+      "args": ["-y", "@azure-devops/mcp", "O365Exchange"]
+    },
+    "ado-onedrive": {
+      "command": "npx",
+      "args": ["-y", "@azure-devops/mcp", "OneDrive"]
+    },
+    "ado-ecs": {
+      "command": "npx",
+      "args": ["-y", "@azure-devops/mcp", "ecsapprovals"]
+    },
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--browser",
+        "msedge",
+        "--user-data-dir",
+        "/Users/rajuroopani/Work6/experiments/playwright-mcp-user-data"
+      ],
+      "autoApprove": ["playwright_navigate", "playwright_screenshot", "playwright_click", "playwright_fill"],
+      "disabled": false,
+      "timeout": 120
+    }
+  }
+}

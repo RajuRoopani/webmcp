@@ -1,0 +1,4 @@
+PLACEHOLDER: 192x192 color icon needed
+Create a 192x192 PNG with Claude bot branding
+Background: #6366F1 (indigo)
+Icon: White "C" or robot symbol
